@@ -1,0 +1,7 @@
+{
+    "extends": "airbnb",
+    "globals": { "fetch": false },
+    "rules": {
+      "space-in-parens": ["error", "always"],
+    }
+  }
