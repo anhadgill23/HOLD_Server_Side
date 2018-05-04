@@ -2,7 +2,7 @@ exports.up = function create( knex, Promise ) {
   return Promise.all( [
     knex.schema.createTable( 'transactions', ( table ) => {
       table.increments();
-      table.date( 'date' );
+      table.timestamp( 'date' );
       table.string( 'coin' );
       table.float( 'cost', 20, 8 );
       table.integer( 'amount' );
