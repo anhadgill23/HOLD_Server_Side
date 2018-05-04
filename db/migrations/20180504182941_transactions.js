@@ -4,7 +4,7 @@ exports.up = function create( knex, Promise ) {
       table.increments();
       table.date( 'date' );
       table.string( 'coin' );
-      table.float( 'cost' );
+      table.float( 'cost', 20, 8 );
       table.integer( 'amount' );
       table.string( 'type' );
       table.integer( 'user_id' ).references( 'id' ).inTable( 'users' );
