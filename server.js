@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 8080; // default port 8080
 
 // const pollRoutes = require( './routes/polls' );
 
-app.get( '/api/urls', ( req, res ) => {
+app.get( '/', ( req, res ) => {
   res.send( {
     status: 'We are now connected to the back end Express server.',
   } );

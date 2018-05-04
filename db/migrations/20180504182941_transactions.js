@@ -2,12 +2,10 @@ exports.up = function create( knex, Promise ) {
   return Promise.all( [
     knex.schema.createTable( 'transactions', ( table ) => {
       table.increments();
-      table.timestamp( 'date' );
-      table.string( 'coin' );
-      table.float( 'cost', 20, 8 );
-      table.integer( 'amount' );
-      table.string( 'type' );
-      table.integer( 'user_id' ).references( 'id' ).inTable( 'users' );
+      table.string( 'symbol' );
+      table.float( 'price', 20, 8 );
+      table.float( 'amount', 20, 8 );
+      table.integer( 'users_id' ).references( 'id' );
     } ),
   ] );
 };
