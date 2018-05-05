@@ -3,6 +3,7 @@ const express = require( 'express' );
 const ENV = process.env.ENV || 'development';
 
 const bodyParser = require( 'body-parser' );
+const bcrypt = require( 'bcrypt' );
 
 const app = express();
 
@@ -19,8 +20,8 @@ app.use( bodyParser.urlencoded( { extended: true } ) );
 // const pollRoutes = require( './routes/polls' );
 
 // Selects all symbols a user has purchased
-// query all user transactions manually calculate profit/loss swell as total coin holdings create and send in json res.json
-app.get( '/:users_id', ( req, res ) => {
+// to do query all user transactions manually calculate profit/loss swell as total coin holdings create and send in json res.json
+app.get( '/api/:users_id', ( req, res ) => {
   knex.select().from( 'transactions' )
     .where( { users_id: req.params.users_id } )
     .then( ( result ) => {
@@ -28,18 +29,12 @@ app.get( '/:users_id', ( req, res ) => {
     } );
 } );
 
-// Selects all transactions of a user of a certain symbol
-app.get( '/:users_id/:symbol', ( req, res ) => {
-  knex.select().from( 'transactions' ).where( { symbol: req.params.symbol, users_id: req.params.users_id } )
-    .then( ( result ) => {
-      res.send( result );
-    } );
-} );
-
 // { id: 2, symbol: 'BTC', price: 10.8, amount: 1, users_id: 2 }
 // Selects a specific transaction
-app.get( '/transactions/:transaction_id', ( req, res ) => {
+app.get( '/api/transactions/:transaction_id', ( req, res ) => {
+  console.log( req.params.transaction_id );
   const transaction_id = req.params.transaction_id;
+  console.log( transaction_id );
   knex.select().from( 'transactions' ).where( { id: transaction_id } )
     .then( result => result )
     .then( ( result ) => {
@@ -64,10 +59,37 @@ app.get( '/transactions/:transaction_id', ( req, res ) => {
     } );
 } );
 
+// Selects all transactions of a user of a certain symbol
+app.get( '/api/:users_id/transactions/:symbol', ( req, res ) => {
+  knex.select().from( 'transactions' ).where( { symbol: req.params.symbol, users_id: req.params.users_id } )
+    .then( ( result ) => {
+      res.send( result );
+    } );
+} );
+
+// how to make the portfolio calcs
+
 // use postman to send json
-app.post( '/transactions/:users_id', ( req, res ) => {
+app.post( '/api/transactions/:users_id', ( req, res ) => {
   // knex.insert( req.body ).into( 'transactions' );
   res.json( req.body );
+} );
+
+// knex( 'option' ).insert( { title, description, poll_id: id[0] } );
+
+app.post( '/api/register', ( req, res ) => {
+  const body = JSON.parse( req.body.symbol );
+  const newEmail = body.email;
+  const newName = body.name;
+  const hashedPassword = bcrypt.hashSync( body.password, 10 );
+  const userObj = { email: newEmail, name: newName, password: hashedPassword };
+  knex( 'users' ).insert( userObj )
+    .then( ( err ) => {
+      console.log( err );
+    } ).catch( ( err ) => {
+      res.status( 422 ).send( { error: '=' } );
+      console.log( err );
+    } );
 } );
 
 // Listens on port
