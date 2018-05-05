@@ -29,19 +29,13 @@ app.get( '/:users_id', ( req, res ) => {
     } );
 } );
 
-// Selects all transactions of a user of a certain symbol
-app.get( '/:users_id/:symbol', ( req, res ) => {
-  knex.select().from( 'transactions' ).where( { symbol: req.params.symbol, users_id: req.params.users_id } )
-    .then( ( result ) => {
-      res.send( result );
-    } );
-} );
-
 // { id: 2, symbol: 'BTC', price: 10.8, amount: 1, users_id: 2 }
 // Selects a specific transaction
 app.get( '/transactions/:transaction_id', ( req, res ) => {
+  console.log( req.params.transaction_id );
   const transaction_id = req.params.transaction_id;
-  knex.select().from( 'transactions' ).where( { id: req.params.transaction_id } )
+  console.log( transaction_id );
+  knex.select().from( 'transactions' ).where( { id: transaction_id } )
     .then( result => result )
     .then( ( result ) => {
       const transaction = result[0];
@@ -65,6 +59,14 @@ app.get( '/transactions/:transaction_id', ( req, res ) => {
     } );
 } );
 
+// Selects all transactions of a user of a certain symbol
+app.get( '/:users_id/transactions/:symbol', ( req, res ) => {
+  knex.select().from( 'transactions' ).where( { symbol: req.params.symbol, users_id: req.params.users_id } )
+    .then( ( result ) => {
+      res.send( result );
+    } );
+} );
+
 // how to make the portfolio calcs
 
 // use postman to send json
@@ -73,7 +75,7 @@ app.post( '/transactions/:users_id', ( req, res ) => {
   res.json( req.body );
 } );
 
-knex( 'option' ).insert( { title, description, poll_id: id[0] } );
+// knex( 'option' ).insert( { title, description, poll_id: id[0] } );
 
 app.post( '/register', ( req, res ) => {
   const body = JSON.parse( req.body.symbol );
