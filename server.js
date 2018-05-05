@@ -79,11 +79,17 @@ app.post( '/api/transactions/:users_id', ( req, res ) => {
 
 app.post( '/api/register', ( req, res ) => {
   const body = JSON.parse( req.body.symbol );
-  const email = body.email;
-  const name = body.name;
-  const password = bcrypt.hashSync( body.password, 10 );
-  // const userObj = { email, name, password };
-  knex( 'users' ).insert( { email, name, password } );
+  const newEmail = body.email;
+  const newName = body.name;
+  const hashedPassword = bcrypt.hashSync( body.password, 10 );
+  const userObj = { email: newEmail, name: newName, password: hashedPassword };
+  knex( 'users' ).insert( userObj )
+    .then( ( err ) => {
+      console.log( err );
+    } ).catch( ( err ) => {
+      res.status( 422 ).send( { error: '=' } );
+      console.log( err );
+    } );
 } );
 
 // Listens on port
