@@ -17,7 +17,15 @@ app.use( bodyParser.urlencoded( { extended: true } ) );
 app.use( bodyParser.json() );
 
 // Middleware to update coin list:
+const updateCoinList = ( req, res, next ) => {
+  rp( 'https://www.cryptocompare.com/api/data/coinlist/' )
+    .then( ( result ) => {
+      console.log( JSON.parse( result ).Data );
+    } );
+  next();
+};
 
+app.use( updateCoinList );
 // Selects all symbols a user has purchased
 // to do query all user transactions manually calculate profit/loss swell as total coin holdings create and send in json res.json
 app.get( '/api/:users_id', ( req, res ) => {
