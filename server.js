@@ -20,7 +20,18 @@ app.use( bodyParser.json() );
 const updateCoinList = ( req, res, next ) => {
   rp( 'https://www.cryptocompare.com/api/data/coinlist/' )
     .then( ( result ) => {
-      console.log( JSON.parse( result ).Data );
+      const data = JSON.parse( result ).Data;
+      const values = Object.values( data );
+
+      values.forEach( ( coin ) => {
+        coin.TotalCoinsFreeFloat = 0;
+        coin.TotalCoinSupply = 0;
+      } );
+      knex( 'coins' )
+        .insert( values )
+        .then( ( err ) => {
+          console.log( err );
+        } );
     } );
   next();
 };
