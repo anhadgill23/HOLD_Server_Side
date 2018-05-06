@@ -49,20 +49,22 @@ app.get( '/api/:users_id', ( req, res ) => {
 
 // { id: 2, symbol: 'BTC', price: 10.8, amount: 1, users_id: 2 }
 // Selects a specific transaction
-app.get( '/api/transactions/:transaction_id', ( req, res ) => {
-  const transaction_id = req.params.transaction_id;
+app.get( '/api/transactions/:transactionId', ( req, res ) => {
+  const { transactionId } = req.params;
   knex.select().from( 'transactions' )
-    .where( { id: transaction_id } )
+    .where( { id: transactionId } )
     .then( result => result )
     .then( ( result ) => {
       const transaction = result[0];
-      const symbol = transaction.symbol;
-      const buyPrice = transaction.price;
+
+
+      const {
+        symbol, price, amount, imageUrl,
+      } = transaction;
       const tradingPair = `${symbol}/USD`;
-      const amount = transaction.amount;
-      const transactionCost = amount * buyPrice;
+      const transactionCost = amount * price;
       const userTransaction = {
-        symbol, buyPrice, tradingPair, amount, transactionCost,
+        symbol, price, tradingPair, amount, transactionCost, imageUrl,
       };
       rp( `https://min-api.cryptocompare.com/data/price?fsym=${symbol}&tsyms=USD` )
         .then( ( singleCoinData ) => {
