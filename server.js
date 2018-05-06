@@ -11,14 +11,12 @@ const PORT = process.env.PORT || 8080; // default port 8080
 
 const knexConfig = require( './knexfile' );
 const knex = require( 'knex' )( knexConfig[ENV] );
-const request = require( 'request' );
+const rp = require( 'request-promise' );
 
 app.use( bodyParser.urlencoded( { extended: true } ) );
 app.use( bodyParser.json() );
 
-// const knexLogger = require( 'knex-logger' );
-
-// const pollRoutes = require( './routes/polls' );
+// Middleware to update coin list:
 
 // Selects all symbols a user has purchased
 // to do query all user transactions manually calculate profit/loss swell as total coin holdings create and send in json res.json
@@ -33,10 +31,9 @@ app.get( '/api/:users_id', ( req, res ) => {
 // { id: 2, symbol: 'BTC', price: 10.8, amount: 1, users_id: 2 }
 // Selects a specific transaction
 app.get( '/api/transactions/:transaction_id', ( req, res ) => {
-  console.log( req.params.transaction_id );
   const transaction_id = req.params.transaction_id;
-  console.log( transaction_id );
-  knex.select().from( 'transactions' ).where( { id: transaction_id } )
+  knex.select().from( 'transactions' )
+    .where( { id: transaction_id } )
     .then( result => result )
     .then( ( result ) => {
       const transaction = result[0];
@@ -48,15 +45,17 @@ app.get( '/api/transactions/:transaction_id', ( req, res ) => {
       const userTransaction = {
         symbol, buyPrice, tradingPair, amount, transactionCost,
       };
-      console.log( userTransaction );
-      request( `https://min-api.cryptocompare.com/data/price?fsym=${symbol}&tsyms=USD`, ( error, response, body ) => {
-        const currentPrice = JSON.parse( body ).USD;
-        const currentWorth = currentPrice * amount;
-        const profit = ( currentWorth - transactionCost ) / transactionCost;
-        userTransaction.currentWorth = currentWorth;
-        userTransaction.profit = profit;
-        res.json( userTransaction );
-      } );
+      rp( `https://min-api.cryptocompare.com/data/price?fsym=${symbol}&tsyms=USD` )
+        .then( ( singleCoinData ) => {
+          const currentPrice = JSON.parse( singleCoinData ).USD;
+          const currentWorth = currentPrice * amount;
+          const profit = ( currentWorth - transactionCost ) / transactionCost * 100;
+          userTransaction.currentWorth = currentWorth;
+          userTransaction.profit = profit;
+          return userTransaction;
+        } ).then( ( userTransactionWithProfit ) => {
+          res.send( userTransactionWithProfit );
+        } );
     } );
 } );
 
