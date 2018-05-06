@@ -18,22 +18,26 @@ app.use( bodyParser.json() );
 
 // Middleware to update coin list:
 const updateCoinList = ( req, res, next ) => {
-  rp( 'https://www.cryptocompare.com/api/data/coinlist/' )
-    .then( ( result ) => {
-      const data = JSON.parse( result ).Data;
-      const values = Object.values( data );
+  knex( 'coins' )
+    .del()
+    .whereNotNull( 'Id' ).then( () => {
+      rp( 'https://www.cryptocompare.com/api/data/coinlist/' )
+        .then( ( result ) => {
+          const data = JSON.parse( result ).Data;
+          const values = Object.values( data );
 
-      values.forEach( ( coin ) => {
-        coin.TotalCoinsFreeFloat = 0;
-        coin.TotalCoinSupply = 0;
-      } );
-      knex( 'coins' )
-        .insert( values )
-        .then( ( err ) => {
-          console.log( err );
+          values.forEach( ( coin ) => {
+            coin.TotalCoinsFreeFloat = 0;
+            coin.TotalCoinSupply = 0;
+          } );
+          knex( 'coins' )
+            .insert( values )
+            .then( ( err ) => {
+              console.log( err );
+            } );
         } );
+      next();
     } );
-  next();
 };
 
 app.use( updateCoinList );
@@ -70,7 +74,7 @@ app.get( '/api/transactions/:transactionId', ( req, res ) => {
         .then( ( singleCoinData ) => {
           const currentPrice = JSON.parse( singleCoinData ).USD;
           const currentWorth = currentPrice * amount;
-          const profit = ( currentWorth - transactionCost ) / transactionCost * 100;
+          const profit = ( currentWorth - transactionCost ) / transactionCost / 0.01;
           userTransaction.currentWorth = currentWorth;
           userTransaction.profit = profit;
           return userTransaction;
