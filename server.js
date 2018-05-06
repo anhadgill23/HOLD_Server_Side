@@ -14,6 +14,7 @@ const knex = require( 'knex' )( knexConfig[ENV] );
 const request = require( 'request' );
 
 app.use( bodyParser.urlencoded( { extended: true } ) );
+app.use( bodyParser.json() );
 
 // const knexLogger = require( 'knex-logger' );
 
@@ -78,7 +79,7 @@ app.post( '/api/transactions/:users_id', ( req, res ) => {
 // knex( 'option' ).insert( { title, description, poll_id: id[0] } );
 
 app.post( '/api/register', ( req, res ) => {
-  const body = JSON.parse( req.body.symbol );
+  const body = JSON.parse( req.body[Object.keys( req.body )[0]] );
   const newEmail = body.email;
   const newName = body.name;
   const hashedPassword = bcrypt.hashSync( body.password, 10 );
