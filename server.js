@@ -16,6 +16,8 @@ const rp = require( 'request-promise' );
 app.use( bodyParser.urlencoded( { extended: true } ) );
 app.use( bodyParser.json() );
 
+const roundNumber = ( num, places ) => ( Math.round( num * 100 ) / 100 ).toFixed( places );
+
 // Middleware to update coin list:
 const updateCoinList = ( req, res, next ) => {
   knex( 'coins' )
@@ -61,20 +63,24 @@ app.get( '/api/transactions/:transactionId', ( req, res ) => {
     .then( ( result ) => {
       const transaction = result[0];
 
-
-      const {
-        symbol, price, amount, imageUrl,
-      } = transaction;
+      const { symbol, imageUrl } = transaction;
+      let { price, amount } = transaction;
       const tradingPair = `${symbol}/USD`;
-      const transactionCost = amount * price;
+      let transactionCost = amount * price;
+
+      // Round all numbers for display
+
+      price = roundNumber( price, 2 );
+      amount = roundNumber( amount, 4 );
+      transactionCost = roundNumber( transactionCost, 2 );
       const userTransaction = {
         symbol, price, tradingPair, amount, transactionCost, imageUrl,
       };
       rp( `https://min-api.cryptocompare.com/data/price?fsym=${symbol}&tsyms=USD` )
         .then( ( singleCoinData ) => {
           const currentPrice = JSON.parse( singleCoinData ).USD;
-          const currentWorth = currentPrice * amount;
-          const profit = ( currentWorth - transactionCost ) / transactionCost / 0.01;
+          const currentWorth = roundNumber( currentPrice * amount, 2 );
+          const profit = roundNumber( ( currentWorth - transactionCost ) / transactionCost / 0.01, 2 );
           userTransaction.currentWorth = currentWorth;
           userTransaction.profit = profit;
           return userTransaction;
