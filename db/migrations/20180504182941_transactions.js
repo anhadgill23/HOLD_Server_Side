@@ -6,6 +6,7 @@ exports.up = function create( knex, Promise ) {
       table.float( 'price', 20, 8 );
       table.float( 'amount', 20, 8 );
       table.string( 'imageUrl' );
+      table.boolean( 'buy' );
       table.integer( 'users_id' ).references( 'id' );
     } ),
   ] );

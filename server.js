@@ -67,6 +67,7 @@ app.get( '/api/transactions/:transactionId', ( req, res ) => {
           imageUrl,
           price,
           amount,
+          buy,
         } = transaction;
 
       rp( `https://min-api.cryptocompare.com/data/price?fsym=${symbol}&tsyms=USD` )
@@ -86,6 +87,7 @@ app.get( '/api/transactions/:transactionId', ( req, res ) => {
             imageUrl,
             currentWorth,
             profit,
+            buy,
           };
           // If object field is a number, round it for display
           Object.entries( userTransaction ).forEach( ( pair ) => {
