@@ -149,7 +149,7 @@ app.get( '/api/transactions/:transactionId', ( req, res ) => {
           };
           // If object field is a number, round it for display
           Object.entries( userTransaction ).forEach( ( pair ) => {
-            if ( typeof pair[1] === 'number' && pair[0] !== 'amount' ) {
+            if ( typeof pair[1] === 'number' && pair[0] !== 'amount' && pair[0] !== 'id' ) {
               userTransaction[pair[0]] = roundNumber( pair[1], 2 );
             }
           } );
