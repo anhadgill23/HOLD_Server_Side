@@ -44,8 +44,7 @@ const updateCoinList = ( req, res, next ) => {
           } );
           knex( 'coins' )
             .insert( values )
-            .then( ( err ) => {
-              console.log( err );
+            .then( ( result ) => {
             } );
         } );
       next();
@@ -72,30 +71,53 @@ app.get( '/api/:users_id', ( req, res ) => {
     } )
     .then( ( apiUrl ) => {
       rp( apiUrl )
-        .then( apiResult => apiResult );
-    } )
-    .then( ( pricesObject ) => {
-      client.query( 'SELECT'
-      + 'symbol,'
-      + 'COALESCE(sum(CASE WHEN buy = TRUE THEN (price * amount) END),0) AS buy,'
-      + 'COALESCE(sum(CASE WHEN buy = FALSE THEN (price * amount) END),0) as sell,'
-      + '(sum(CASE WHEN buy = TRUE THEN (amount) END) - COALESCE(sum(CASE WHEN buy = FALSE THEN (amount) END),0)) as remaining'
+        .then( ( apiResult ) => {
+          // 3.  Query DB for values
+          const query = 'SELECT'
+            + ' symbol,'
+            + 'COALESCE(sum(CASE WHEN buy = TRUE THEN (price * amount) END),0) AS buy,'
+            + 'COALESCE(sum(CASE WHEN buy = FALSE THEN (price * amount) END),0) as sell,'
+            + '(sum(CASE WHEN buy = TRUE THEN (amount) END) - COALESCE(sum(CASE WHEN buy = FALSE THEN (amount) END),0)) as remaining'
 
-      + 'FROM transactions'
-      + 'WHERE users_id = 2'
-      + 'GROUP BY symbol;', ( err, queryThing ) => {
-        console.log( queryThing );
-      } );
-    } )
-    .then( ( queryResult ) => {
-      res.send( queryResult );
-    } )
-    .catch( ( err ) => {
-      console.log( err );
-      res.send( 'oop' );
+            + ' FROM transactions'
+            + ' WHERE users_id = 2'
+            + ' GROUP BY symbol;';
+          knex.raw( query )
+            .then( ( result ) => {
+              const parsedApiResult = JSON.parse( apiResult );
+              const data = [];
+              result.rows.forEach( ( currency ) => {
+                const { symbol, remaining } = currency;
+                const currentPrice = parsedApiResult[symbol].USD;
+                const currentValue = currentPrice * currency.remaining;
+                const originalValue = currency.buy - currency.sell;
+                const gain = currentValue - originalValue;
+                const percentageGain = ( gain - originalValue ) / originalValue / 0.01;
+                const dataObj = {
+                  symbol,
+                  remaining: roundNumber( remaining, 4 ),
+                  currentValue,
+                  originalValue,
+                  gain,
+                  percentageGain,
+                };
+
+                // round values
+                Object.entries( dataObj ).forEach( ( pair ) => {
+                  if ( typeof pair[1] === 'number' && pair[0] !== 'amount' ) {
+                    dataObj[pair[0]] = roundNumber( pair[1], 2 );
+                  }
+                } );
+                data.push( dataObj );
+              } );
+
+
+              res.send( data );
+            } );
+        } );
     } );
 
-  // 3.  Query DB for values
+
   // 4.  Calculate current values for display
 } );
 
