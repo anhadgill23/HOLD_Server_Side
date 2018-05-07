@@ -64,7 +64,7 @@ app.get( '/api/transactions/:transactionId', ( req, res ) => {
       const
         {
           symbol,
-          imageUrl,
+          image_url,
           price,
           amount,
           buy,
@@ -84,7 +84,7 @@ app.get( '/api/transactions/:transactionId', ( req, res ) => {
             tradingPair,
             amount: roundNumber( amount, 4 ),
             transactionCost,
-            imageUrl,
+            image_url,
             currentWorth,
             profit,
             buy,
