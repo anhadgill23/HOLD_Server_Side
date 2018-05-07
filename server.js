@@ -51,13 +51,23 @@ app.get( '/api/:users_id', ( req, res ) => {
     .where( 'users_id', req.params.users_id )
     .groupBy( 'symbol' )
     .then( ( result ) => {
-      const symbolArray = [];
+      // 2.  Make API call for current prices for all coins
+      let apiUrl = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms=';
+      const urlTo = '&tsyms=USD';
       result.forEach( ( resultObj ) => {
-        symbolArray.push( resultObj.symbol );
+        apiUrl = `${apiUrl + resultObj.symbol},`;
       } );
-      console.log( symbolArray );
+      apiUrl += urlTo;
+      return apiUrl;
+    } )
+    .then( ( apiUrl ) => {
+      rp( apiUrl )
+        .then( apiResult => pricesObject );
+    } )
+    .then( ( pricesObject ) => {
+
     } );
-  // 2.  Make API call for current prices for all coins
+
   // 3.  Query DB for values
   // 4.  Calculate current values for display
 } );
