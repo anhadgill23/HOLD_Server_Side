@@ -5,6 +5,7 @@ exports.up = function create( knex, Promise ) {
       table.string( 'symbol' );
       table.float( 'price', 20, 8 );
       table.float( 'amount', 20, 8 );
+      table.string( 'imageUrl' );
       table.integer( 'users_id' ).references( 'id' );
     } ),
   ] );

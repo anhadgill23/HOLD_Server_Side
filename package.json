@@ -31,7 +31,8 @@
     "knex-logger": "^0.1.0",
     "nodemon": "^1.17.3",
     "pg": "^7.4.1",
-    "request": "^2.85.0"
+    "request": "^2.85.0",
+    "request-promise": "^4.2.2"
   },
   "devDependencies": {
     "eslint": "^4.19.1",
