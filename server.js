@@ -146,18 +146,24 @@ app.post( '/api/register', ( req, res ) => {
     });
 });
 
-// app.post( '/api/login', ( req, res ) => {
-//   const {email, password} = req.body;
-//   console.log(req.body);
-//   knex.select().from( 'users' )
-//     .where( 'email', email )
-//     .then( ( result ) => {
-//       if(result && bcrypt.compareSync(password, result.password)) {
-//         res.status(201).json(user);
-//       }
-//     })
+app.post( '/api/login', ( req, res ) => {
+  const {email, password} = req.body;
+  console.log(req.body);
+  knex.select().from( 'users' )
+    .where( 'email', email )
+    .then( ( result ) => {
+      console.log(result[0]);
+      if(result && bcrypt.compareSync(password, result[0].password)) {
+        console.log("success!");
+        res.send("it worked")
+      }
+      return Promise.reject('Password incorrect')
+    })
+    .catch( ( err ) => {
+      res.status(404).send( { error: '=' } );
+    })
 
-// })
+})
 
 // Listens on port
 app.listen( PORT, () => {
