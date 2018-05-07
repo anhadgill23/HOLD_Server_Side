@@ -121,20 +121,43 @@ app.post( '/api/transactions/:users_id', ( req, res ) => {
 
 // knex( 'option' ).insert( { title, description, poll_id: id[0] } );
 
+
 app.post( '/api/register', ( req, res ) => {
-  const body = JSON.parse( req.body[Object.keys( req.body )[0]] );
-  const newEmail = body.email;
+  console.log(req.body);
+  const body = req.body; //JSON.parse( req.body[Object.keys( req.body )[0]] );
+  const newEmail = body.email.toLowerCase();
   const newName = body.name;
   const hashedPassword = bcrypt.hashSync( body.password, 10 );
   const userObj = { email: newEmail, name: newName, password: hashedPassword };
-  knex( 'users' ).insert( userObj )
-    .then( ( err ) => {
-      console.log( err );
-    } ).catch( ( err ) => {
-      res.status( 422 ).send( { error: '=' } );
-      console.log( err );
-    } );
-} );
+
+  knex( 'users' )
+    .where( 'email', newEmail )
+    .then( ( results ) => {
+      if(results.length === 0) {
+        return knex( 'users' ).insert( userObj ).returning('*');
+      }
+      return Promise.reject('Email already taken')
+    })
+    .then(user => {
+      res.status(201).json(user);
+    })
+    .catch( ( err ) => {
+      res.status(409).send( { error: '=' } );
+    });
+});
+
+// app.post( '/api/login', ( req, res ) => {
+//   const {email, password} = req.body;
+//   console.log(req.body);
+//   knex.select().from( 'users' )
+//     .where( 'email', email )
+//     .then( ( result ) => {
+//       if(result && bcrypt.compareSync(password, result.password)) {
+//         res.status(201).json(user);
+//       }
+//     })
+
+// })
 
 // Listens on port
 app.listen( PORT, () => {
