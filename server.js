@@ -44,13 +44,22 @@ const updateCoinList = ( req, res, next ) => {
 
 app.use( updateCoinList );
 // Selects all symbols a user has purchased
-// to do query all user transactions manually calculate profit/loss swell as total coin holdings create and send in json res.json
 app.get( '/api/:users_id', ( req, res ) => {
-  knex.select().from( 'transactions' )
-    .where( { users_id: req.params.users_id } )
+  // 1.  Query DB for all unique coins
+  knex.select( 'symbol' )
+    .from( 'transactions' )
+    .where( 'users_id', req.params.users_id )
+    .groupBy( 'symbol' )
     .then( ( result ) => {
-      res.send( result );
+      const symbolArray = [];
+      result.forEach( ( resultObj ) => {
+        symbolArray.push( resultObj.symbol );
+      } );
+      console.log( symbolArray );
     } );
+  // 2.  Make API call for current prices for all coins
+  // 3.  Query DB for values
+  // 4.  Calculate current values for display
 } );
 
 // { id: 2, symbol: 'BTC', price: 10.8, amount: 1, users_id: 2 }
