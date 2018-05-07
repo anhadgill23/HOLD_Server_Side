@@ -16,7 +16,7 @@ const rp = require( 'request-promise' );
 app.use( bodyParser.urlencoded( { extended: true } ) );
 app.use( bodyParser.json() );
 
-roundToTwo = num => +( `${Math.round( `${num}e+2` )}e-2` );
+const roundToTwo = num => +( `${Math.round( `${num}e+2` )}e-2` );
 
 // Middleware to update coin list:
 const updateCoinList = ( req, res, next ) => {
@@ -63,12 +63,16 @@ app.get( '/api/transactions/:transactionId', ( req, res ) => {
     .then( ( result ) => {
       const transaction = result[0];
 
-
-      const {
-        symbol, price, amount, imageUrl,
-      } = transaction;
+      const { symbol, imageUrl } = transaction;
+      let { price, amount } = transaction;
       const tradingPair = `${symbol}/USD`;
-      const transactionCost = amount * price;
+      let transactionCost = amount * price;
+
+      // Round all numbers for display
+
+      price = roundToTwo( price );
+      amount = roundToTwo( amount );
+      transactionCost = roundToTwo( transactionCost );
       const userTransaction = {
         symbol, price, tradingPair, amount, transactionCost, imageUrl,
       };
