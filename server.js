@@ -16,6 +16,8 @@ const rp = require( 'request-promise' );
 app.use( bodyParser.urlencoded( { extended: true } ) );
 app.use( bodyParser.json() );
 
+roundToTwo = num => +( `${Math.round( `${num}e+2` )}e-2` );
+
 // Middleware to update coin list:
 const updateCoinList = ( req, res, next ) => {
   knex( 'coins' )
