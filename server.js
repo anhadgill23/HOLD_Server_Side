@@ -1,5 +1,15 @@
 const express = require( 'express' );
+const { Client } = require( 'pg' );
 
+const client = new Client( {
+  user: 'labber',
+  host: 'localhost',
+  database: 'final_project',
+  password: 'labber',
+  port: 5432,
+} );
+
+client.connect();
 const ENV = process.env.ENV || 'development';
 
 const bodyParser = require( 'body-parser' );
@@ -62,10 +72,27 @@ app.get( '/api/:users_id', ( req, res ) => {
     } )
     .then( ( apiUrl ) => {
       rp( apiUrl )
-        .then( apiResult => pricesObject );
+        .then( apiResult => apiResult );
     } )
     .then( ( pricesObject ) => {
+      client.query( 'SELECT'
+      + 'symbol,'
+      + 'COALESCE(sum(CASE WHEN buy = TRUE THEN (price * amount) END),0) AS buy,'
+      + 'COALESCE(sum(CASE WHEN buy = FALSE THEN (price * amount) END),0) as sell,'
+      + '(sum(CASE WHEN buy = TRUE THEN (amount) END) - COALESCE(sum(CASE WHEN buy = FALSE THEN (amount) END),0)) as remaining'
 
+      + 'FROM transactions'
+      + 'WHERE users_id = 2'
+      + 'GROUP BY symbol;', ( err, queryThing ) => {
+        console.log( queryThing );
+      } );
+    } )
+    .then( ( queryResult ) => {
+      res.send( queryResult );
+    } )
+    .catch( ( err ) => {
+      console.log( err );
+      res.send( 'oop' );
     } );
 
   // 3.  Query DB for values
