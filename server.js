@@ -119,6 +119,7 @@ app.get( '/api/transactions/:transactionId', ( req, res ) => {
     .then( ( transaction ) => {
       const
         {
+          id,
           symbol,
           image_url,
           price,
@@ -135,6 +136,7 @@ app.get( '/api/transactions/:transactionId', ( req, res ) => {
           const profit = ( currentWorth - transactionCost ) / transactionCost / 0.01;
 
           const userTransaction = {
+            id,
             symbol,
             price,
             tradingPair,
