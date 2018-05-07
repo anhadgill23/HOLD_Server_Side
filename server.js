@@ -1,5 +1,15 @@
 const express = require( 'express' );
+const { Client } = require( 'pg' );
 
+const client = new Client( {
+  user: 'labber',
+  host: 'localhost',
+  database: 'final_project',
+  password: 'labber',
+  port: 5432,
+} );
+
+client.connect();
 const ENV = process.env.ENV || 'development';
 
 const bodyParser = require( 'body-parser' );
@@ -34,8 +44,7 @@ const updateCoinList = ( req, res, next ) => {
           } );
           knex( 'coins' )
             .insert( values )
-            .then( ( err ) => {
-              console.log( err );
+            .then( ( result ) => {
             } );
         } );
       next();
@@ -44,13 +53,72 @@ const updateCoinList = ( req, res, next ) => {
 
 app.use( updateCoinList );
 // Selects all symbols a user has purchased
-// to do query all user transactions manually calculate profit/loss swell as total coin holdings create and send in json res.json
 app.get( '/api/:users_id', ( req, res ) => {
-  knex.select().from( 'transactions' )
-    .where( { users_id: req.params.users_id } )
+  // 1.  Query DB for all unique coins
+  knex.select( 'symbol' )
+    .from( 'transactions' )
+    .where( 'users_id', req.params.users_id )
+    .groupBy( 'symbol' )
     .then( ( result ) => {
-      res.send( result );
+      // 2.  Make API call for current prices for all coins
+      let apiUrl = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms=';
+      const urlTo = '&tsyms=USD';
+      result.forEach( ( resultObj ) => {
+        apiUrl = `${apiUrl + resultObj.symbol},`;
+      } );
+      apiUrl += urlTo;
+      return apiUrl;
+    } )
+    .then( ( apiUrl ) => {
+      rp( apiUrl )
+        .then( ( apiResult ) => {
+          // 3.  Query DB for values
+          const query = 'SELECT'
+            + ' symbol,'
+            + 'COALESCE(sum(CASE WHEN buy = TRUE THEN (price * amount) END),0) AS buy,'
+            + 'COALESCE(sum(CASE WHEN buy = FALSE THEN (price * amount) END),0) as sell,'
+            + '(sum(CASE WHEN buy = TRUE THEN (amount) END) - COALESCE(sum(CASE WHEN buy = FALSE THEN (amount) END),0)) as remaining'
+
+            + ' FROM transactions'
+            + ' WHERE users_id = 2'
+            + ' GROUP BY symbol;';
+          knex.raw( query )
+            .then( ( result ) => {
+              const parsedApiResult = JSON.parse( apiResult );
+              const data = [];
+              result.rows.forEach( ( currency ) => {
+                const { symbol, remaining } = currency;
+                const currentPrice = parsedApiResult[symbol].USD;
+                const currentValue = currentPrice * currency.remaining;
+                const originalValue = currency.buy - currency.sell;
+                const gain = currentValue - originalValue;
+                const percentageGain = ( gain - originalValue ) / originalValue / 0.01;
+                const dataObj = {
+                  symbol,
+                  remaining: roundNumber( remaining, 4 ),
+                  currentValue,
+                  originalValue,
+                  gain,
+                  percentageGain,
+                };
+
+                // round values
+                Object.entries( dataObj ).forEach( ( pair ) => {
+                  if ( typeof pair[1] === 'number' && pair[0] !== 'amount' ) {
+                    dataObj[pair[0]] = roundNumber( pair[1], 2 );
+                  }
+                } );
+                data.push( dataObj );
+              } );
+
+
+              res.send( data );
+            } );
+        } );
     } );
+
+
+  // 4.  Calculate current values for display
 } );
 
 // { id: 2, symbol: 'BTC', price: 10.8, amount: 1, users_id: 2 }
