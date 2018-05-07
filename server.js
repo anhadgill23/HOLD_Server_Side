@@ -1,22 +1,10 @@
 const express = require( 'express' );
-const { Client } = require( 'pg' );
 
-const client = new Client( {
-  user: 'labber',
-  host: 'localhost',
-  database: 'final_project',
-  password: 'labber',
-  port: 5432,
-} );
-
-client.connect();
 const ENV = process.env.ENV || 'development';
-
 const bodyParser = require( 'body-parser' );
 const bcrypt = require( 'bcrypt' );
 
 const app = express();
-
 const PORT = process.env.PORT || 8080; // default port 8080
 
 const knexConfig = require( './knexfile' );
