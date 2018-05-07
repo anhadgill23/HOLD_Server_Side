@@ -10,7 +10,7 @@ exports.seed = function create( knex, Promise ) {
           amount: 10.0,
           price: 128.8,
           buy: true,
-          imageUrl: 'https://www.cryptocompare.com/media/19633/btc.png',
+          image_url: 'https://www.cryptocompare.com/media/19633/btc.png',
         },
         {
           users_id: 2,
@@ -18,7 +18,7 @@ exports.seed = function create( knex, Promise ) {
           amount: 1.0,
           price: 10.8,
           buy: true,
-          imageUrl: 'https://www.cryptocompare.com/media/19633/btc.png',
+          image_url: 'https://www.cryptocompare.com/media/19633/btc.png',
         },
         {
           users_id: 2,
@@ -26,7 +26,7 @@ exports.seed = function create( knex, Promise ) {
           amount: 5.5,
           price: 10.8,
           buy: false,
-          imageUrl: 'https://www.cryptocompare.com/media/19633/btc.png',
+          image_url: 'https://www.cryptocompare.com/media/19633/btc.png',
         },
         {
           users_id: 2,
@@ -34,14 +34,14 @@ exports.seed = function create( knex, Promise ) {
           amount: 100,
           price: 12,
           buy: true,
-          imageUrl: 'https://www.cryptocompare.com/media/19782/litecoin-logo.png',
+          image_url: 'https://www.cryptocompare.com/media/19782/litecoin-logo.png',
         }, {
           users_id: 1,
           symbol: 'LTC',
           amount: 5,
           price: 55.8,
           buy: true,
-          imageUrl: 'https://www.cryptocompare.com/media/19782/litecoin-logo.png',
+          image_url: 'https://www.cryptocompare.com/media/19782/litecoin-logo.png',
         },
         {
           users_id: 1,
@@ -49,7 +49,7 @@ exports.seed = function create( knex, Promise ) {
           amount: 18,
           price: 110,
           buy: true,
-          imageUrl: 'https://www.cryptocompare.com/media/19782/litecoin-logo.png',
+          image_url: 'https://www.cryptocompare.com/media/19782/litecoin-logo.png',
         },
         {
           users_id: 1,
@@ -57,7 +57,7 @@ exports.seed = function create( knex, Promise ) {
           amount: 100,
           price: 12,
           buy: true,
-          imageUrl: 'https://www.cryptocompare.com/media/20646/eth_logo.png',
+          image_url: 'https://www.cryptocompare.com/media/20646/eth_logo.png',
         },
       ] ) );
 };
