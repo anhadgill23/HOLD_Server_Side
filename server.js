@@ -61,20 +61,20 @@ app.get( '/api/:users_id', ( req, res ) => {
       rp( apiUrl )
         .then( ( apiResult ) => {
           // 3.  Query DB for values
-          const query = 'SELECT'
+          const query = `${'SELECT'
             + ' symbol,'
             + 'COALESCE(sum(CASE WHEN buy = TRUE THEN (price * amount) END),0) AS buy,'
             + 'COALESCE(sum(CASE WHEN buy = FALSE THEN (price * amount) END),0) as sell,'
             + '(sum(CASE WHEN buy = TRUE THEN (amount) END) - COALESCE(sum(CASE WHEN buy = FALSE THEN (amount) END),0)) as remaining'
 
             + ' FROM transactions'
-            + ' WHERE users_id = 2'
-            + ' GROUP BY symbol;';
+            + ' WHERE users_id = '}${req.params.users_id
+          } GROUP BY symbol;`;
           knex.raw( query )
-            .then( ( result ) => {
+            .then( ( portfolioQueryResult ) => {
               const parsedApiResult = JSON.parse( apiResult );
               const data = [];
-              result.rows.forEach( ( currency ) => {
+              portfolioQueryResult.rows.forEach( ( currency ) => {
                 const { symbol, remaining } = currency;
                 const currentPrice = parsedApiResult[symbol].USD;
                 const currentValue = currentPrice * currency.remaining;
@@ -98,8 +98,6 @@ app.get( '/api/:users_id', ( req, res ) => {
                 } );
                 data.push( dataObj );
               } );
-
-
               res.send( data );
             } );
         } );
