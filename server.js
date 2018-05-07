@@ -96,6 +96,8 @@ app.get( '/api/:users_id/transactions/:symbol', ( req, res ) => {
 
 // use postman to send json
 app.post( '/api/transactions/:users_id', ( req, res ) => {
+  // Need to query database for coin image URL before inserting
+  // TODO use promise to make sure database access happens synchronously
   // knex.insert( req.body ).into( 'transactions' );
   res.json( req.body );
 } );
