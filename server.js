@@ -59,33 +59,42 @@ app.get( '/api/transactions/:transactionId', ( req, res ) => {
   const { transactionId } = req.params;
   knex.select().from( 'transactions' )
     .where( { id: transactionId } )
-    .then( result => result )
-    .then( ( result ) => {
-      const transaction = result[0];
+    .then( result => result[0] )
+    .then( ( transaction ) => {
+      const
+        {
+          symbol,
+          imageUrl,
+          price,
+          amount,
+        } = transaction;
 
-      const { symbol, imageUrl } = transaction;
-      let { price, amount } = transaction;
-      const tradingPair = `${symbol}/USD`;
-      let transactionCost = amount * price;
-
-      // Round all numbers for display
-
-      price = roundNumber( price, 2 );
-      amount = roundNumber( amount, 4 );
-      transactionCost = roundNumber( transactionCost, 2 );
-      const userTransaction = {
-        symbol, price, tradingPair, amount, transactionCost, imageUrl,
-      };
       rp( `https://min-api.cryptocompare.com/data/price?fsym=${symbol}&tsyms=USD` )
         .then( ( singleCoinData ) => {
+          const tradingPair = `${symbol}/USD`;
+          const transactionCost = amount * price;
           const currentPrice = JSON.parse( singleCoinData ).USD;
-          const currentWorth = roundNumber( currentPrice * amount, 2 );
-          const profit = roundNumber( ( currentWorth - transactionCost ) / transactionCost / 0.01, 2 );
-          userTransaction.currentWorth = currentWorth;
-          userTransaction.profit = profit;
-          return userTransaction;
-        } ).then( ( userTransactionWithProfit ) => {
-          res.send( userTransactionWithProfit );
+          const currentWorth = currentPrice * amount;
+          const profit = ( currentWorth - transactionCost ) / transactionCost / 0.01;
+
+          const userTransaction = {
+            symbol,
+            price,
+            tradingPair,
+            amount: roundNumber( amount, 4 ),
+            transactionCost,
+            imageUrl,
+            currentWorth,
+            profit,
+          };
+          // If object field is a number, round it for display
+          Object.entries( userTransaction ).forEach( ( pair ) => {
+            if ( typeof pair[1] === 'number' && pair[0] !== 'amount' ) {
+              userTransaction[pair[0]] = roundNumber( pair[1], 2 );
+            }
+          } );
+
+          res.send( userTransaction );
         } );
     } );
 } );
