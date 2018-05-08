@@ -171,6 +171,20 @@ app.get( '/api/transactions/:transactionId', verifyUser, ( req, res ) => {
     } );
 } );
 
+app.post( '/api/transactions/:transactionId', verifyUser, ( req, res ) => {
+  const transactionId = req.params.transactionId;
+  knex( 'transactions' )
+    .del()
+    .where( 'id', transactionId )
+    .then( ( result ) => {
+      console.log( 'Delete', result );
+      res.status( 200 );
+    } )
+    .catch( ( err ) => {
+      console.log( err );
+    } );
+} );
+
 // Selects all transactions of a user of a certain symbol
 app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
   const results = [];
@@ -222,7 +236,8 @@ app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
 // how to make the portfolio calcs
 
 // use postman to send json
-app.post( '/api/transactions/:users_id', verifyUser, ( req, res ) => {
+// post new transaction
+app.post( '/api/:users_id/transactions/', verifyUser, ( req, res ) => {
   // Need to query database for coin image URL before inserting
   // TODO use promise to make sure database access happens synchronously
   // knex.insert( req.body ).into( 'transactions' );
