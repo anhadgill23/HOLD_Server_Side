@@ -227,17 +227,22 @@ app.post( '/api/login', ( req, res ) => {
     .then( ( result ) => {
       if ( result && bcrypt.compareSync( password, result[0].password ) ) {
         req.session.id = result[0].id;
-        return res.status( 200 ).send( 'it worked' );
+        return result[0];
       }
       return Promise.reject( 'Password incorrect' );
     } )
+    .then(user => {
+      res.status(201).json(user);
+    })
     .catch( ( err ) => {
       res.status( 404 ).send( { error: '=' } );
     } );
 } );
 
 app.post( '/api/logout', ( req, res ) => {
+  console.log("LOG OUT");
   req.session = null;
+  res.status(201).send( "hello from log out" );
 } );
 
 // Listens on port
