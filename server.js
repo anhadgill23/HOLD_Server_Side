@@ -20,6 +20,14 @@ app.use( cookieSession( {
   maxAge: 24 * 60 * 60 * 1000,
 } ) );
 
+const verifyUser = ( req, res, next ) => {
+  if ( req.session.id ) {
+    next();
+  } else {
+    res.status( 403 ).send( { error: '=' } );
+  }
+};
+
 const roundNumber = ( num, places ) => ( Math.round( num * 100 ) / 100 ).toFixed( places );
 
 // Middleware to update coin list:
@@ -47,7 +55,8 @@ const updateCoinList = ( req, res, next ) => {
 
 app.use( updateCoinList );
 // Selects all symbols a user has purchased
-app.get( '/api/:users_id', ( req, res ) => {
+app.get( '/api/:users_id', verifyUser, ( req, res ) => {
+  console.log( 'IM INSIDE SESSION' );
   // 1.  Query DB for all unique coins
   knex.select( 'symbol' )
     .from( 'transactions' )
@@ -96,7 +105,7 @@ app.get( '/api/:users_id', ( req, res ) => {
                   percentageGain,
                 };
 
-                // round values
+                  // round values
                 Object.entries( dataObj ).forEach( ( pair ) => {
                   if ( typeof pair[1] === 'number' && pair[0] !== 'amount' ) {
                     dataObj[pair[0]] = roundNumber( pair[1], 2 );
@@ -115,7 +124,7 @@ app.get( '/api/:users_id', ( req, res ) => {
 
 // { id: 2, symbol: 'BTC', price: 10.8, amount: 1, users_id: 2 }
 // Selects a specific transaction
-app.get( '/api/transactions/:transactionId', ( req, res ) => {
+app.get( '/api/transactions/:transactionId', verifyUser, ( req, res ) => {
   const { transactionId } = req.params;
   knex.select().from( 'transactions' )
     .where( { id: transactionId } )
@@ -164,7 +173,7 @@ app.get( '/api/transactions/:transactionId', ( req, res ) => {
 } );
 
 // Selects all transactions of a user of a certain symbol
-app.get( '/api/:users_id/transactions/:symbol', ( req, res ) => {
+app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
   knex.select().from( 'transactions' ).where( { symbol: req.params.symbol, users_id: req.params.users_id } )
     .then( ( result ) => {
       res.send( result );
@@ -174,7 +183,7 @@ app.get( '/api/:users_id/transactions/:symbol', ( req, res ) => {
 // how to make the portfolio calcs
 
 // use postman to send json
-app.post( '/api/transactions/:users_id', ( req, res ) => {
+app.post( '/api/transactions/:users_id', verifyUser, ( req, res ) => {
   // Need to query database for coin image URL before inserting
   // TODO use promise to make sure database access happens synchronously
   // knex.insert( req.body ).into( 'transactions' );
@@ -184,7 +193,7 @@ app.post( '/api/transactions/:users_id', ( req, res ) => {
 // knex( 'option' ).insert( { title, description, poll_id: id[0] } );
 
 
-app.post( '/api/register', ( req, res ) => {
+app.post( '/api/register', verifyUser, ( req, res ) => {
   const body = req.body; // JSON.parse( req.body[Object.keys( req.body )[0]] );
   const newEmail = body.email.toLowerCase();
   const newName = body.name;
@@ -211,14 +220,14 @@ app.post( '/api/register', ( req, res ) => {
     } );
 } );
 
-app.post( '/api/login', ( req, res ) => {
+app.post( '/api/login', verifyUser, ( req, res ) => {
   const { email, password } = req.body;
   knex.select().from( 'users' )
     .where( 'email', email )
     .then( ( result ) => {
       if ( result && bcrypt.compareSync( password, result[0].password ) ) {
         req.session.id = result[0].id;
-        return res.send( 'it worked' );
+        return res.status( 200 ).send( 'it worked' );
       }
       return Promise.reject( 'Password incorrect' );
     } )
@@ -227,7 +236,7 @@ app.post( '/api/login', ( req, res ) => {
     } );
 } );
 
-app.post( '/logout', ( req, res ) => {
+app.post( '/api/logout', ( req, res ) => {
   req.session = null;
 } );
 
