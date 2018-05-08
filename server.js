@@ -21,12 +21,11 @@ app.use( cookieSession( {
 } ) );
 
 const verifyUser = ( req, res, next ) => {
-  // if ( req.session.id ) {
-  //   next();
-  // } else {
-  //   res.status( 403 ).send( { error: '=' } );
-  // }
-  next();
+  if ( req.session.id ) {
+    next();
+  } else {
+    res.status( 403 ).send( { error: '=' } );
+  }
 };
 
 const roundNumber = ( num, places ) => ( Math.round( num * 100 ) / 100 ).toFixed( places );
