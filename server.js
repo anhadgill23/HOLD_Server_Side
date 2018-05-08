@@ -152,12 +152,15 @@ app.post( '/api/login', ( req, res ) => {
   knex.select().from( 'users' )
     .where( 'email', email )
     .then( ( result ) => {
-      console.log(result[0]);
+      console.log("server result:", result[0]);
       if(result && bcrypt.compareSync(password, result[0].password)) {
-        console.log("success!");
-        res.send("it worked")
+        return result[0];
       }
       return Promise.reject('Password incorrect')
+    })
+    .then(user => {
+      console.log("user cb");
+      res.status(201).json(user);
     })
     .catch( ( err ) => {
       res.status(404).send( { error: '=' } );
