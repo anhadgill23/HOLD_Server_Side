@@ -21,11 +21,12 @@ app.use( cookieSession( {
 } ) );
 
 const verifyUser = ( req, res, next ) => {
-  if ( req.session.id ) {
-    next();
-  } else {
-    res.status( 403 ).send( { error: '=' } );
-  }
+  // if ( req.session.id ) {
+  //   next();
+  // } else {
+  //   res.status( 403 ).send( { error: '=' } );
+  // }
+  next();
 };
 
 const roundNumber = ( num, places ) => ( Math.round( num * 100 ) / 100 ).toFixed( places );
@@ -174,9 +175,44 @@ app.get( '/api/transactions/:transactionId', verifyUser, ( req, res ) => {
 
 // Selects all transactions of a user of a certain symbol
 app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
-  knex.select().from( 'transactions' ).where( { symbol: req.params.symbol, users_id: req.params.users_id } )
-    .then( ( result ) => {
-      res.send( result );
+  const results = [];
+  rp( `https://min-api.cryptocompare.com/data/price?fsym=${req.params.symbol}&tsyms=USD` )
+    .then( singleCoinData => singleCoinData )
+    .then( ( singleCoinData ) => {
+      knex.select().from( 'transactions' ).where( { symbol: req.params.symbol, users_id: req.params.users_id } )
+        .then( ( transactions ) => {
+          transactions.forEach( ( transaction ) => {
+            const
+              {
+                id,
+                symbol,
+                image_url,
+                price,
+                amount,
+                buy,
+              } = transaction;
+
+            const tradingPair = `${symbol}/USD`;
+            const transactionCost = amount * price;
+            const currentPrice = JSON.parse( singleCoinData ).USD;
+            const currentWorth = currentPrice * amount;
+            const profit = ( currentWorth - transactionCost ) / transactionCost / 0.01;
+            const userTransaction = {
+              id,
+              symbol,
+              price,
+              tradingPair,
+              amount: roundNumber( amount, 4 ),
+              transactionCost,
+              image_url,
+              currentWorth,
+              profit,
+              buy,
+            };
+            results.push( userTransaction );
+          } );
+          res.send( results );
+        } );
     } );
 } );
 
@@ -231,18 +267,18 @@ app.post( '/api/login', ( req, res ) => {
       }
       return Promise.reject( 'Password incorrect' );
     } )
-    .then(user => {
-      res.status(201).json(user);
-    })
+    .then( ( user ) => {
+      res.status( 201 ).json( user );
+    } )
     .catch( ( err ) => {
       res.status( 404 ).send( { error: '=' } );
     } );
 } );
 
 app.post( '/api/logout', ( req, res ) => {
-  console.log("LOG OUT");
+  console.log( 'LOG OUT' );
   req.session = null;
-  res.status(201).send( "hello from log out" );
+  res.status( 201 ).send( 'hello from log out' );
 } );
 
 // Listens on port
