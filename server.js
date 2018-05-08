@@ -34,7 +34,7 @@ const roundNumber = ( num, places ) => ( Math.round( num * 100 ) / 100 ).toFixed
 const updateCoinList = ( req, res, next ) => {
   knex( 'coins' )
     .del()
-    .whereNotNull( 'Id' ).then( () => {
+    .whereNotNull( 'id' ).then( () => {
       rp( 'https://www.cryptocompare.com/api/data/coinlist/' )
         .then( ( result ) => {
           const data = JSON.parse( result ).Data;
@@ -53,7 +53,6 @@ const updateCoinList = ( req, res, next ) => {
     } );
 };
 
-app.use( updateCoinList );
 // Selects all symbols a user has purchased
 app.get( '/api/:users_id', verifyUser, ( req, res ) => {
   console.log( 'IM INSIDE SESSION' );
@@ -208,6 +207,11 @@ app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
               profit,
               buy,
             };
+            Object.entries( userTransaction ).forEach( ( pair ) => {
+              if ( typeof pair[1] === 'number' && pair[0] !== 'amount' && pair[0] !== 'id' ) {
+                userTransaction[pair[0]] = roundNumber( pair[1], 2 );
+              }
+            } );
             results.push( userTransaction );
           } );
           res.send( results );
@@ -255,7 +259,7 @@ app.post( '/api/register', ( req, res ) => {
     } );
 } );
 
-app.post( '/api/login', ( req, res ) => {
+app.post( '/api/login', updateCoinList, ( req, res ) => {
   const { email, password } = req.body;
   knex.select().from( 'users' )
     .where( 'email', email )
