@@ -10,9 +10,15 @@ const PORT = process.env.PORT || 8080; // default port 8080
 const knexConfig = require( './knexfile' );
 const knex = require( 'knex' )( knexConfig[ENV] );
 const rp = require( 'request-promise' );
+const cookieSession = require( 'cookie-session' );
 
 app.use( bodyParser.urlencoded( { extended: true } ) );
 app.use( bodyParser.json() );
+app.use( cookieSession( {
+  name: 'session',
+  secret: 'secret',
+  maxAge: 24 * 60 * 60 * 1000,
+} ) );
 
 const roundNumber = ( num, places ) => ( Math.round( num * 100 ) / 100 ).toFixed( places );
 
@@ -179,8 +185,7 @@ app.post( '/api/transactions/:users_id', ( req, res ) => {
 
 
 app.post( '/api/register', ( req, res ) => {
-  console.log(req.body);
-  const body = req.body; //JSON.parse( req.body[Object.keys( req.body )[0]] );
+  const body = req.body; // JSON.parse( req.body[Object.keys( req.body )[0]] );
   const newEmail = body.email.toLowerCase();
   const newName = body.name;
   const hashedPassword = bcrypt.hashSync( body.password, 10 );
@@ -189,37 +194,42 @@ app.post( '/api/register', ( req, res ) => {
   knex( 'users' )
     .where( 'email', newEmail )
     .then( ( results ) => {
-      if(results.length === 0) {
-        return knex( 'users' ).insert( userObj ).returning('*');
+      if ( results.length === 0 ) {
+        return knex( 'users' ).insert( userObj ).returning( 'id' );
       }
-      return Promise.reject('Email already taken')
-    })
-    .then(user => {
-      res.status(201).json(user);
-    })
+      return Promise.reject( 'Email already taken' );
+    } )
+    .then( ( id ) => {
+      const user = {
+        id, email: newEmail, name: newName, password: hashedPassword,
+      };
+      req.session.id = id;
+      res.status( 201 ).json( user );
+    } )
     .catch( ( err ) => {
-      res.status(409).send( { error: '=' } );
-    });
-});
+      res.status( 409 ).send( { error: '=' } );
+    } );
+} );
 
 app.post( '/api/login', ( req, res ) => {
-  const {email, password} = req.body;
-  console.log(req.body);
+  const { email, password } = req.body;
   knex.select().from( 'users' )
     .where( 'email', email )
     .then( ( result ) => {
-      console.log(result[0]);
-      if(result && bcrypt.compareSync(password, result[0].password)) {
-        console.log("success!");
-        res.send("it worked")
+      if ( result && bcrypt.compareSync( password, result[0].password ) ) {
+        req.session.id = result[0].id;
+        return res.send( 'it worked' );
       }
-      return Promise.reject('Password incorrect')
-    })
+      return Promise.reject( 'Password incorrect' );
+    } )
     .catch( ( err ) => {
-      res.status(404).send( { error: '=' } );
-    })
+      res.status( 404 ).send( { error: '=' } );
+    } );
+} );
 
-})
+app.post( '/logout', ( req, res ) => {
+  req.session = null;
+} );
 
 // Listens on port
 app.listen( PORT, () => {
