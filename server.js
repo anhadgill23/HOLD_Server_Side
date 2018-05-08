@@ -193,7 +193,7 @@ app.post( '/api/transactions/:users_id', verifyUser, ( req, res ) => {
 // knex( 'option' ).insert( { title, description, poll_id: id[0] } );
 
 
-app.post( '/api/register', verifyUser, ( req, res ) => {
+app.post( '/api/register', ( req, res ) => {
   const body = req.body; // JSON.parse( req.body[Object.keys( req.body )[0]] );
   const newEmail = body.email.toLowerCase();
   const newName = body.name;
