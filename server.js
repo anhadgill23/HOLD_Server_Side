@@ -220,7 +220,7 @@ app.post( '/api/register', ( req, res ) => {
     } );
 } );
 
-app.post( '/api/login', verifyUser, ( req, res ) => {
+app.post( '/api/login', ( req, res ) => {
   const { email, password } = req.body;
   knex.select().from( 'users' )
     .where( 'email', email )
