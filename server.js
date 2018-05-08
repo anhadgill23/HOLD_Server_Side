@@ -245,10 +245,10 @@ app.post( '/api/register', ( req, res ) => {
     } )
     .then( ( id ) => {
       const user = {
-        id, email: newEmail, name: newName, password: hashedPassword,
+        id: id[0], email: newEmail, name: newName, password: hashedPassword,
       };
       req.session.id = id;
-      res.status( 201 ).json( user );
+      res.status( 201 ).json( JSON.stringify( user ) );
     } )
     .catch( ( err ) => {
       res.status( 409 ).send( { error: '=' } );
