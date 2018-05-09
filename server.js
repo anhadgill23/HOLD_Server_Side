@@ -21,11 +21,12 @@ app.use( cookieSession( {
 } ) );
 
 const verifyUser = ( req, res, next ) => {
-  if ( req.session.id ) {
-    next();
-  } else {
-    res.status( 403 ).send( { error: '=' } );
-  }
+  // if ( req.session.id ) {
+  //   next();
+  // } else {
+  //   res.status( 403 ).send( { error: '=' } );
+  // }
+  next();
 };
 
 const roundNumber = ( num, places ) => ( Math.round( num * 100 ) / 100 ).toFixed( places );
@@ -54,7 +55,7 @@ const updateCoinList = ( req, res, next ) => {
 };
 
 // Selects all symbols a user has purchased
-app.get( '/api/:users_id', verifyUser, ( req, res ) => {
+app.get( '/api/:users_id/transactions', verifyUser, ( req, res ) => {
   console.log( 'IM INSIDE SESSION' );
   // 1.  Query DB for all unique coins
   knex.select( 'symbol' )
@@ -234,11 +235,18 @@ app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
 } );
 
 // how to make the portfolio calcs
+app.get( '/api/coins', verifyUser, ( req, res ) => {
+  knex( 'coins' )
+    .select( ['Symbol', 'FullName'] )
+    .then( ( result ) => {
+      res.send( result );
+    } ).catch( ( err ) => {
+      console.log( err );
+    } );
+} );
 
-// use postman to send json
-// post new transaction
 app.post( '/api/transactions/', verifyUser, ( req, res ) => {
-  console.log( 'CORRECT' );
+  console.log( typeof req.body.transaction );
   // Need to query database for coin image URL before inserting
   // TODO use promise to make sure database access happens synchronously
   // knex.insert( req.body ).into( 'transactions' );
