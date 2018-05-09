@@ -30,16 +30,12 @@ const verifyUser = ( req, res, next ) => {
 
 const roundNumber = ( num, places ) => ( Math.round( num * 100 ) / 100 ).toFixed( places );
 
-// Selects all symbols a user has purchased
 app.get( '/api/:users_id/transactions', verifyUser, ( req, res ) => {
-  console.log( 'IM INSIDE SESSION' );
-  // 1.  Query DB for all unique coins
   knex.select( 'symbol' )
     .from( 'transactions' )
     .where( 'users_id', req.params.users_id )
     .groupBy( 'symbol' )
     .then( ( result ) => {
-      // 2.  Make API call for current prices for all coins
       let apiUrl = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms=';
       const urlTo = '&tsyms=USD';
       result.forEach( ( resultObj ) => {
@@ -51,7 +47,6 @@ app.get( '/api/:users_id/transactions', verifyUser, ( req, res ) => {
     .then( ( apiUrl ) => {
       rp( apiUrl )
         .then( ( apiResult ) => {
-          // 3.  Query DB for values
           const query = `${'SELECT'
             + ' symbol,'
             + 'COALESCE(sum(CASE WHEN buy = TRUE THEN (price * amount) END),0) AS buy,'
@@ -81,7 +76,6 @@ app.get( '/api/:users_id/transactions', verifyUser, ( req, res ) => {
                   percentageGain,
                 };
 
-                  // round values
                 Object.entries( dataObj ).forEach( ( pair ) => {
                   if ( typeof pair[1] === 'number' && pair[0] !== 'amount' ) {
                     dataObj[pair[0]] = roundNumber( pair[1], 2 );
@@ -93,13 +87,8 @@ app.get( '/api/:users_id/transactions', verifyUser, ( req, res ) => {
             } );
         } );
     } );
-
-
-  // 4.  Calculate current values for display
 } );
 
-// { id: 2, symbol: 'BTC', price: 10.8, amount: 1, users_id: 2 }
-// Selects a specific transaction
 app.get( '/api/transactions/:transactionId', verifyUser, ( req, res ) => {
   const { transactionId } = req.params;
   knex.select().from( 'transactions' )
@@ -154,7 +143,6 @@ app.post( '/api/transactions/:transactionId', verifyUser, ( req, res ) => {
     .del()
     .where( 'id', transactionId )
     .then( ( result ) => {
-      console.log( 'Delete', result );
       res.status( 200 );
     } )
     .catch( ( err ) => {
@@ -206,6 +194,9 @@ app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
             results.push( userTransaction );
           } );
           res.send( results );
+        } )
+        .catch( ( err ) => {
+          console.log( err );
         } );
     } );
 } );
@@ -259,20 +250,13 @@ app.post( '/api/transactions/', verifyUser, ( req, res ) => {
         .returning( 'id' )
         .insert( transaction )
         .then( ( result ) => {
-          console.log( result );
+          console.log( 'INSERTED COIN AT', result );
         } );
     } );
-  // knex( 'transactions' ).returning( 'id' )
-  //   .insert( req.body.transactions )
-  //   .then( ( result ) => {
-  //     console.log( 'result' );
-  //   } );
+
 
   res.send( req.body );
 } );
-
-// knex( 'option' ).insert( { title, description, poll_id: id[0] } );
-
 
 app.post( '/api/register', ( req, res ) => {
   const body = req.body; // JSON.parse( req.body[Object.keys( req.body )[0]] );
