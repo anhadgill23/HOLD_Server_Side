@@ -237,20 +237,40 @@ app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
 // how to make the portfolio calcs
 app.get( '/api/coins', verifyUser, ( req, res ) => {
   knex( 'coins' )
-    .select( ['Symbol', 'FullName'] )
+    .select( ['Symbol', 'FullName', 'SortOrder'] )
+    .orderBy( 'SortOrder', 'asc' )
+    .limit( 200 )
     .then( ( result ) => {
       res.send( result );
-    } ).catch( ( err ) => {
+    } )
+    .catch( ( err ) => {
       console.log( err );
     } );
 } );
 
 app.post( '/api/transactions/', verifyUser, ( req, res ) => {
-  console.log( typeof req.body.transaction );
-  // Need to query database for coin image URL before inserting
-  // TODO use promise to make sure database access happens synchronously
-  // knex.insert( req.body ).into( 'transactions' );
-  res.json( req.body );
+  const transaction = req.body;
+  const { symbol } = transaction;
+  knex( 'coins' )
+    .where( 'Symbol', symbol )
+    .then( results => results[0] )
+    .then( ( coinQuery ) => {
+      const url = `https://www.cryptocompare.com${coinQuery.ImageUrl}`;
+      transaction.image_url = url;
+      knex( 'transactions' )
+        .returning( 'id' )
+        .insert( transaction )
+        .then( ( result ) => {
+          console.log( result );
+        } );
+    } );
+  // knex( 'transactions' ).returning( 'id' )
+  //   .insert( req.body.transactions )
+  //   .then( ( result ) => {
+  //     console.log( 'result' );
+  //   } );
+
+  res.send( req.body );
 } );
 
 // knex( 'option' ).insert( { title, description, poll_id: id[0] } );
