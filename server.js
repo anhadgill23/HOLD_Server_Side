@@ -21,38 +21,14 @@ app.use( cookieSession( {
 } ) );
 
 const verifyUser = ( req, res, next ) => {
-  // if ( req.session.id ) {
-  //   next();
-  // } else {
-  //   res.status( 403 ).send( { error: '=' } );
-  // }
-  next();
+  if ( req.session.id ) {
+    next();
+  } else {
+    res.status( 403 ).send( { error: '=' } );
+  }
 };
 
 const roundNumber = ( num, places ) => ( Math.round( num * 100 ) / 100 ).toFixed( places );
-
-// Middleware to update coin list:
-const updateCoinList = ( req, res, next ) => {
-  knex( 'coins' )
-    .del()
-    .whereNotNull( 'id' ).then( () => {
-      rp( 'https://www.cryptocompare.com/api/data/coinlist/' )
-        .then( ( result ) => {
-          const data = JSON.parse( result ).Data;
-          const values = Object.values( data );
-
-          values.forEach( ( coin ) => {
-            coin.TotalCoinsFreeFloat = 0;
-            coin.TotalCoinSupply = 0;
-          } );
-          knex( 'coins' )
-            .insert( values )
-            .then( ( result ) => {
-            } );
-        } );
-      next();
-    } );
-};
 
 // Selects all symbols a user has purchased
 app.get( '/api/:users_id/transactions', verifyUser, ( req, res ) => {
@@ -237,20 +213,62 @@ app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
 // how to make the portfolio calcs
 app.get( '/api/coins', verifyUser, ( req, res ) => {
   knex( 'coins' )
-    .select( ['Symbol', 'FullName'] )
-    .then( ( result ) => {
-      res.send( result );
-    } ).catch( ( err ) => {
-      console.log( err );
+    .del()
+    .whereNotNull( 'id' )
+    .then( () => {
+      rp( 'https://www.cryptocompare.com/api/data/coinlist/' )
+        .then( ( result ) => {
+          const data = JSON.parse( result ).Data;
+          const values = Object.values( data );
+
+          values.forEach( ( coin ) => {
+            coin.TotalCoinsFreeFloat = 0;
+            coin.TotalCoinSupply = 0;
+          } );
+          return values;
+        } )
+        .then( ( values ) => {
+          knex( 'coins' )
+            .insert( values )
+            .then( ( result ) => {
+              knex( 'coins' )
+                .select( ['Symbol', 'FullName', 'SortOrder'] )
+                .orderBy( 'SortOrder', 'asc' )
+                .limit( 200 )
+                .then( ( coinQueryResult ) => {
+                  res.send( coinQueryResult );
+                } )
+                .catch( ( err ) => {
+                  console.log( err );
+                } );
+            } );
+        } );
     } );
 } );
 
 app.post( '/api/transactions/', verifyUser, ( req, res ) => {
-  console.log( typeof req.body.transaction );
-  // Need to query database for coin image URL before inserting
-  // TODO use promise to make sure database access happens synchronously
-  // knex.insert( req.body ).into( 'transactions' );
-  res.json( req.body );
+  const transaction = req.body;
+  const { symbol } = transaction;
+  knex( 'coins' )
+    .where( 'Symbol', symbol )
+    .then( results => results[0] )
+    .then( ( coinQuery ) => {
+      const url = `https://www.cryptocompare.com${coinQuery.ImageUrl}`;
+      transaction.image_url = url;
+      knex( 'transactions' )
+        .returning( 'id' )
+        .insert( transaction )
+        .then( ( result ) => {
+          console.log( result );
+        } );
+    } );
+  // knex( 'transactions' ).returning( 'id' )
+  //   .insert( req.body.transactions )
+  //   .then( ( result ) => {
+  //     console.log( 'result' );
+  //   } );
+
+  res.send( req.body );
 } );
 
 // knex( 'option' ).insert( { title, description, poll_id: id[0] } );
@@ -283,7 +301,7 @@ app.post( '/api/register', ( req, res ) => {
     } );
 } );
 
-app.post( '/api/login', updateCoinList, ( req, res ) => {
+app.post( '/api/login', ( req, res ) => {
   const { email, password } = req.body;
   knex.select().from( 'users' )
     .where( 'email', email )
