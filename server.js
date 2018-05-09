@@ -281,7 +281,7 @@ app.post( '/api/register', ( req, res ) => {
       res.status( 201 ).json( user );
     } )
     .catch( ( err ) => {
-      res.status( 409 ).send( { error: '=' } );
+      res.status( 409 ).send( {err: 'Email already taken'} );
     } );
 } );
 
@@ -300,7 +300,7 @@ app.post( '/api/login', ( req, res ) => {
       res.status( 201 ).json( user );
     } )
     .catch( ( err ) => {
-      res.status( 404 ).send( { error: '=' } );
+      res.status( 404 ).send( { err: 'Email or password incorrect' } );
     } );
 } );
 
