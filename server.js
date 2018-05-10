@@ -48,20 +48,21 @@ app.get( '/api/:users_id/transactions', verifyUser, ( req, res ) => {
       rp( apiUrl )
         .then( ( apiResult ) => {
           const query = `${'SELECT'
-            + ' symbol,'
+            + ' symbol, image_url,'
             + 'COALESCE(sum(CASE WHEN buy = TRUE THEN (price * amount) END),0) AS buy,'
             + 'COALESCE(sum(CASE WHEN buy = FALSE THEN (price * amount) END),0) as sell,'
             + '(sum(CASE WHEN buy = TRUE THEN (amount) END) - COALESCE(sum(CASE WHEN buy = FALSE THEN (amount) END),0)) as remaining'
 
             + ' FROM transactions'
             + ' WHERE users_id = '}${req.params.users_id
-          } GROUP BY symbol;`;
+          } GROUP BY symbol, image_url;`;
+
           knex.raw( query )
             .then( ( portfolioQueryResult ) => {
               const parsedApiResult = JSON.parse( apiResult );
               const data = [];
               portfolioQueryResult.rows.forEach( ( currency ) => {
-                const { symbol, remaining } = currency;
+                const { symbol, remaining, image_url } = currency;
                 const currentPrice = parsedApiResult[symbol].USD;
                 const currentValue = currentPrice * currency.remaining;
                 const originalValue = currency.buy - currency.sell;
@@ -69,6 +70,7 @@ app.get( '/api/:users_id/transactions', verifyUser, ( req, res ) => {
                 const percentageGain = ( gain - originalValue ) / originalValue / 0.01;
                 const dataObj = {
                   symbol,
+                  image_url,
                   remaining: roundNumber( remaining, 4 ),
                   currentValue,
                   originalValue,
@@ -281,7 +283,7 @@ app.post( '/api/register', ( req, res ) => {
       res.status( 201 ).json( user );
     } )
     .catch( ( err ) => {
-      res.status( 409 ).send( {err: 'Email already taken'} );
+      res.status( 409 ).send( { err: 'Email already taken' } );
     } );
 } );
 
