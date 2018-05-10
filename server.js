@@ -30,6 +30,11 @@ const verifyUser = ( req, res, next ) => {
 
 const roundNumber = ( num, places ) => ( Math.round( num * 100 ) / 100 ).toFixed( places );
 
+//* ********************************************
+//* ** GET /api/:users_id/transactions ***
+//* ** All transactions per user
+//* ********************************************
+
 app.get( '/api/:users_id/transactions', verifyUser, ( req, res ) => {
   knex.select( 'symbol' )
     .from( 'transactions' )
@@ -91,68 +96,37 @@ app.get( '/api/:users_id/transactions', verifyUser, ( req, res ) => {
     } );
 } );
 
-app.get( '/api/transactions/:transactionId', verifyUser, ( req, res ) => {
-  const { transactionId } = req.params;
-  knex.select().from( 'transactions' )
-    .where( { id: transactionId } )
-    .then( result => result[0] )
-    .then( ( transaction ) => {
-      const
-        {
-          id,
-          symbol,
-          image_url,
-          price,
-          amount,
-          buy,
-        } = transaction;
+//* ********************************************
+//* ** POST /api/transactions ***
+//* ** Inserts transaction into databse
+//* ********************************************
 
-      rp( `https://min-api.cryptocompare.com/data/price?fsym=${symbol}&tsyms=USD` )
-        .then( ( singleCoinData ) => {
-          const tradingPair = `${symbol}/USD`;
-          const transactionCost = amount * price;
-          const currentPrice = JSON.parse( singleCoinData ).USD;
-          const currentWorth = currentPrice * amount;
-          const profit = ( currentWorth - transactionCost ) / transactionCost / 0.01;
-
-          const userTransaction = {
-            id,
-            symbol,
-            price,
-            tradingPair,
-            amount: roundNumber( amount, 4 ),
-            transactionCost,
-            image_url,
-            currentWorth,
-            profit,
-            buy,
-          };
-          // If object field is a number, round it for display
-          Object.entries( userTransaction ).forEach( ( pair ) => {
-            if ( typeof pair[1] === 'number' && pair[0] !== 'amount' && pair[0] !== 'id' ) {
-              userTransaction[pair[0]] = roundNumber( pair[1], 2 );
-            }
-          } );
-
-          res.send( userTransaction );
+app.post( '/api/transactions/', verifyUser, ( req, res ) => {
+  const transaction = req.body;
+  const { symbol } = transaction;
+  knex( 'coins' )
+    .where( 'Symbol', symbol )
+    .then( results => results[0] )
+    .then( ( coinQuery ) => {
+      const url = `https://www.cryptocompare.com${coinQuery.ImageUrl}`;
+      transaction.image_url = url;
+      knex( 'transactions' )
+        .returning( 'id' )
+        .insert( transaction )
+        .then( ( result ) => {
+          console.log( 'INSERTED COIN AT', result );
         } );
     } );
+
+
+  res.send( req.body );
 } );
 
-app.post( '/api/transactions/:transactionId', verifyUser, ( req, res ) => {
-  const transactionId = req.params.transactionId;
-  knex( 'transactions' )
-    .del()
-    .where( 'id', transactionId )
-    .then( ( result ) => {
-      res.status( 200 );
-    } )
-    .catch( ( err ) => {
-      console.log( err );
-    } );
-} );
+//* ****************************************************
+//* ** GET /api/:users_id/transactions/:symbol *********
+//* ** Gets all transactions for a given user and symbol
+//* ****************************************************
 
-// Selects all transactions of a user of a certain symbol
 app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
   const results = [];
   rp( `https://min-api.cryptocompare.com/data/price?fsym=${req.params.symbol}&tsyms=USD` )
@@ -203,7 +177,64 @@ app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
     } );
 } );
 
-// how to make the portfolio calcs
+//* ********************************************
+//* ** POST /api/transactions/:transactionId ***
+//* ** Gets specific transaction
+//* ********************************************
+
+app.get( '/api/transactions/:transactionId', verifyUser, ( req, res ) => {
+  const { transactionId } = req.params;
+  knex.select().from( 'transactions' )
+    .where( { id: transactionId } )
+    .then( result => result[0] )
+    .then( ( transaction ) => {
+      const
+        {
+          id,
+          symbol,
+          image_url,
+          price,
+          amount,
+          buy,
+        } = transaction;
+
+      rp( `https://min-api.cryptocompare.com/data/price?fsym=${symbol}&tsyms=USD` )
+        .then( ( singleCoinData ) => {
+          const tradingPair = `${symbol}/USD`;
+          const transactionCost = amount * price;
+          const currentPrice = JSON.parse( singleCoinData ).USD;
+          const currentWorth = currentPrice * amount;
+          const profit = ( currentWorth - transactionCost ) / transactionCost / 0.01;
+
+          const userTransaction = {
+            id,
+            symbol,
+            price,
+            tradingPair,
+            amount: roundNumber( amount, 4 ),
+            transactionCost,
+            image_url,
+            currentWorth,
+            profit,
+            buy,
+          };
+          // If object field is a number, round it for display
+          Object.entries( userTransaction ).forEach( ( pair ) => {
+            if ( typeof pair[1] === 'number' && pair[0] !== 'amount' && pair[0] !== 'id' ) {
+              userTransaction[pair[0]] = roundNumber( pair[1], 2 );
+            }
+          } );
+
+          res.send( userTransaction );
+        } );
+    } );
+} );
+
+//* ********************************************
+//* ** GET /api/coins ***
+//* ** Get coin list
+//* ********************************************
+
 app.get( '/api/coins', verifyUser, ( req, res ) => {
   knex( 'coins' )
     .del()
@@ -239,26 +270,11 @@ app.get( '/api/coins', verifyUser, ( req, res ) => {
     } );
 } );
 
-app.post( '/api/transactions/', verifyUser, ( req, res ) => {
-  const transaction = req.body;
-  const { symbol } = transaction;
-  knex( 'coins' )
-    .where( 'Symbol', symbol )
-    .then( results => results[0] )
-    .then( ( coinQuery ) => {
-      const url = `https://www.cryptocompare.com${coinQuery.ImageUrl}`;
-      transaction.image_url = url;
-      knex( 'transactions' )
-        .returning( 'id' )
-        .insert( transaction )
-        .then( ( result ) => {
-          console.log( 'INSERTED COIN AT', result );
-        } );
-    } );
+//* ********************************************
+//* ** POST /api/register ***
+//* ** Registers a new user
+//* ********************************************
 
-
-  res.send( req.body );
-} );
 
 app.post( '/api/register', ( req, res ) => {
   const body = req.body; // JSON.parse( req.body[Object.keys( req.body )[0]] );
@@ -287,6 +303,11 @@ app.post( '/api/register', ( req, res ) => {
     } );
 } );
 
+//* ********************************************
+//* ** POST /api/login ***
+//* ** Logs user in
+//* ********************************************
+
 app.post( '/api/login', ( req, res ) => {
   const { email, password } = req.body;
   knex.select().from( 'users' )
@@ -306,13 +327,17 @@ app.post( '/api/login', ( req, res ) => {
     } );
 } );
 
+//* ********************************************
+//* ** POST /api/logut ***
+//* ** Logs user out
+//* ********************************************
+
 app.post( '/api/logout', ( req, res ) => {
   console.log( 'LOG OUT' );
   req.session = null;
   res.status( 201 ).send( 'hello from log out' );
 } );
 
-// Listens on port
 app.listen( PORT, () => {
   console.log( `Example app listening on port ${PORT}!` );
 } );
