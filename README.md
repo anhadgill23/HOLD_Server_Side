@@ -8,4 +8,4 @@ HOLD is a bitcoin and other cryptocurrency portfolio tracker app. It lets users 
 
 HOLD helps solve the problem of people having to manually do the complex calculations for their investments. It does that for them.
 
-This is the server side code for the app.
+This is the server side code for the app. The client side code is [here](https://github.com/anhadgill23/HOLD_Client_Side).
