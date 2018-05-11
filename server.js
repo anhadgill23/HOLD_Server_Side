@@ -180,7 +180,7 @@ app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
 } );
 
 //* ********************************************
-//* ** POST /api/transactions/:transactionId ***
+//* ** GET /api/transactions/:transactionId ***
 //* ** Gets specific transaction
 //* ********************************************
 
@@ -231,6 +231,25 @@ app.get( '/api/transactions/:transactionId', verifyUser, ( req, res ) => {
         } );
     } );
 } );
+
+//* ********************************************
+//* ** POST /api/transactions/:transactionId ***
+//* ** Gets specific transaction
+//* ********************************************
+
+app.post( '/api/transactions/:transactionId', verifyUser, ( req, res ) => {
+  const transactionId = req.params.transactionId;
+  knex( 'transactions' )
+    .del()
+    .where( 'id', transactionId )
+    .then( ( result ) => {
+      res.status( 200 );
+    } )
+    .catch( ( err ) => {
+      console.log( err );
+    } );
+} );
+
 
 //* ********************************************
 //* ** GET /api/coins ***
