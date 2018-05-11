@@ -180,7 +180,7 @@ app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
 } );
 
 //* ********************************************
-//* ** POST /api/transactions/:transactionId ***
+//* ** GET /api/transactions/:transactionId ***
 //* ** Gets specific transaction
 //* ********************************************
 
@@ -233,6 +233,25 @@ app.get( '/api/transactions/:transactionId', verifyUser, ( req, res ) => {
 } );
 
 //* ********************************************
+//* ** POST /api/transactions/:transactionId ***
+//* ** Gets specific transaction
+//* ********************************************
+
+app.post( '/api/transactions/:transactionId', verifyUser, ( req, res ) => {
+  const { transactionId } = req.params;
+  knex( 'transactions' )
+    .del()
+    .where( 'id', transactionId )
+    .then( ( ) => {
+      res.status( 200 );
+    } )
+    .catch( ( err ) => {
+      console.log( err );
+    } );
+} );
+
+
+//* ********************************************
 //* ** GET /api/coins ***
 //* ** Get coin list
 //* ********************************************
@@ -256,7 +275,7 @@ app.get( '/api/coins', verifyUser, ( req, res ) => {
         .then( ( values ) => {
           knex( 'coins' )
             .insert( values )
-            .then( ( result ) => {
+            .then( ( ) => {
               knex( 'coins' )
                 .select( ['Symbol', 'FullName', 'SortOrder'] )
                 .orderBy( 'SortOrder', 'asc' )
@@ -279,7 +298,7 @@ app.get( '/api/coins', verifyUser, ( req, res ) => {
 
 
 app.post( '/api/register', ( req, res ) => {
-  const body = req.body; // JSON.parse( req.body[Object.keys( req.body )[0]] );
+  const { body } = req; // JSON.parse( req.body[Object.keys( req.body )[0]] );
   const newEmail = body.email.toLowerCase();
   const newName = body.name;
   const hashedPassword = bcrypt.hashSync( body.password, 10 );
