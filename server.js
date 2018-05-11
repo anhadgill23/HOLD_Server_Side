@@ -169,6 +169,7 @@ app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
                 price,
                 amount,
                 buy,
+                created_at,
               } = transaction;
 
             const tradingPair = `${symbol}/USD`;
@@ -187,6 +188,7 @@ app.get( '/api/:users_id/transactions/:symbol', verifyUser, ( req, res ) => {
               currentWorth,
               profit,
               buy,
+              created_at,
             };
             Object.entries( userTransaction ).forEach( ( pair ) => {
               if ( typeof pair[1] === 'number' && pair[0] !== 'amount' && pair[0] !== 'id' ) {
