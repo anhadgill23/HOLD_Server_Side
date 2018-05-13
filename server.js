@@ -33,6 +33,7 @@ const roundNumber = ( num, places ) => ( Math.round( num * 100 ) / 100 ).toFixed
 //* ********************************************
 //* ** GET /api/:users_id/transactions ***
 //* ** All transactions per user
+//* ** This endpoint for the portfolio page
 //* ********************************************
 
 app.get( '/api/:users_id/transactions', verifyUser, ( req, res ) => {
@@ -75,6 +76,7 @@ app.get( '/api/:users_id/transactions', verifyUser, ( req, res ) => {
                 const percentageGain = ( gain - originalValue ) / originalValue / 0.01;
                 const dataObj = {
                   symbol,
+                  currentPrice,
                   image_url,
                   remaining: roundNumber( remaining, 4 ),
                   currentValue,
