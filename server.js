@@ -12,6 +12,7 @@ const knex = require( 'knex' )( knexConfig[ENV] );
 const rp = require( 'request-promise' );
 const cookieSession = require( 'cookie-session' );
 
+app.use( express.static( 'public' ) );
 app.use( bodyParser.urlencoded( { extended: true } ) );
 app.use( bodyParser.json() );
 app.use( cookieSession( {
