@@ -9,3 +9,11 @@ HOLD is a bitcoin and other cryptocurrency portfolio tracker app. It lets users 
 HOLD helps solve the problem of people having to manually do the complex calculations for their investments. It does that for them.
 
 This is the server side code for the app. The client side code is [here](https://github.com/anhadgill23/HOLD_Client_Side).
+
+## Heroku Instructions
+* In client repo run open `package.json` and modify the `build` script so it points to the server root directory, then run `npm run build`.
+* Install heroku CLI `
+* Run `heroku create <app_name>`
+* Push to heroku `git push heroku master`
+* Set heroku ENV varialbe for produciton `heroku config:set ENV=production`
+* Run KNEX migrations `heroku knex run migrate:latest`
