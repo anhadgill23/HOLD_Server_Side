@@ -34,6 +34,10 @@
     "request": "^2.85.0",
     "request-promise": "^4.2.2"
   },
+  "engines": {
+    "npm": "6.0.0",
+    "node": "8.9.4"
+  },
   "devDependencies": {
     "eslint": "^4.19.1",
     "eslint-config-airbnb": "^16.1.0",
