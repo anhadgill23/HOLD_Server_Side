@@ -310,6 +310,7 @@ app.post( '/api/register', ( req, res ) => {
   knex( 'users' )
     .where( 'email', newEmail )
     .then( ( results ) => {
+      console.log( results );
       if ( results.length === 0 ) {
         return knex( 'users' ).insert( userObj ).returning( 'id' );
       }
