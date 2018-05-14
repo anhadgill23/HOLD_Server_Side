@@ -11,6 +11,7 @@ HOLD helps solve the problem of people having to manually do the complex calcula
 This is the server side code for the app. The client side code is [here](https://github.com/anhadgill23/HOLD_Client_Side).
 
 ## Heroku Instructions
+* In client repo run open `package.json` and modify the `build` script so it points to the server root directory, then run `npm run build`.
 * Install heroku CLI `
 * Run `heroku create <app_name>`
 * Push to heroku `git push heroku master`
