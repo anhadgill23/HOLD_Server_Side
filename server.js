@@ -12,6 +12,7 @@ const knex = require( 'knex' )( knexConfig[ENV] );
 const rp = require( 'request-promise' );
 const cookieSession = require( 'cookie-session' );
 
+app.use( express.static( 'public' ) );
 app.use( bodyParser.urlencoded( { extended: true } ) );
 app.use( bodyParser.json() );
 app.use( cookieSession( {
@@ -309,6 +310,7 @@ app.post( '/api/register', ( req, res ) => {
   knex( 'users' )
     .where( 'email', newEmail )
     .then( ( results ) => {
+      console.log( results );
       if ( results.length === 0 ) {
         return knex( 'users' ).insert( userObj ).returning( 'id' );
       }
