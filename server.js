@@ -264,7 +264,7 @@ app.get( '/api/coins', verifyUser, ( req, res ) => {
     .del()
     .whereNotNull( 'id' )
     .then( () => {
-      rp( 'https://www.cryptocompare.com/api/data/coinlist/' )
+      rp( 'https://min-api.cryptocompare.com/data/all/coinlist' )
         .then( ( result ) => {
           const data = JSON.parse( result ).Data;
           const values = Object.values( data );
