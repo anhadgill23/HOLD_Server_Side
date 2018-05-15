@@ -334,8 +334,8 @@ app.post( '/api/register', ( req, res ) => {
 //* ********************************************
 
 app.post( '/api/login', ( req, res ) => {
-  const { email, password } = req.body;
-  email.toLowerCase();
+  const { password } = req.body;
+  const email = req.body.email.toLowerCase();
   knex.select().from( 'users' )
     .where( 'email', email )
     .then( ( result ) => {
@@ -359,7 +359,6 @@ app.post( '/api/login', ( req, res ) => {
 //* ********************************************
 
 app.post( '/api/logout', ( req, res ) => {
-  console.log( 'LOG OUT' );
   req.session = null;
   res.status( 201 ).send( 'hello from log out' );
 } );
