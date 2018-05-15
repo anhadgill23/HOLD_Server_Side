@@ -335,6 +335,7 @@ app.post( '/api/register', ( req, res ) => {
 
 app.post( '/api/login', ( req, res ) => {
   const { email, password } = req.body;
+  email.toLowerCase();
   knex.select().from( 'users' )
     .where( 'email', email )
     .then( ( result ) => {
