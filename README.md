@@ -16,4 +16,4 @@ This is the server side code for the app. The client side code is [here](https:/
 * Run `heroku create <app_name>`
 * Push to heroku `git push heroku master`
 * Set heroku ENV varialbe for produciton `heroku config:set ENV=production`
-* Run KNEX migrations `heroku knex run migrate:latest`
+* Run KNEX migrations `heroku knex run migrate:latest``
